@@ -597,8 +597,18 @@ namespace PetaPoco
         /// </remarks>
         public virtual void OnExecutingCommand(IDbCommand cmd)
         {
-        }
+          string msg = "Petapoco SQL: " + cmd.CommandText;
+          foreach (IDataParameter param in cmd.Parameters)
+          {
+            string paramValue = param.Value.ToString();
+            if (paramValue.Length > 20)
+              paramValue = paramValue.Substring(0,20);
 
+            msg += " " + paramValue;
+          }
+          System.Diagnostics.Debug.WriteLine(msg);
+        } 
+          
         /// <summary>
         ///     Called on completion of command execution
         /// </summary>

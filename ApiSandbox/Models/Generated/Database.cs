@@ -177,7 +177,7 @@ namespace ApiSandbox
 
 
 
-		[Column] public string Group { get; set; }
+		[Column] public string GroupName { get; set; }
 
 
 
