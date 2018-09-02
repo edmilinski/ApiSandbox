@@ -69,26 +69,26 @@ namespace ApiSandbox
     }
 
     [HttpGet]
-    [Route("ApiSandbox/collections")]
+    [Route("col/list")]
     public List<string> GetCollectionNames()
     {
       return _dicAllCollections.Select(x => x.Key).ToList();
     }
 
-    [Route("ApiSandbox/{collection}")]
+    [Route("col/{collection}")]
     public List<JObject> Get(string collection)
     {
       Dictionary<string, JObject> dicCollection = GetCollection(collection);
       return dicCollection.Values.ToList();
     }
 
-    [Route("ApiSandbox/{collection}/{id}")]
+    [Route("col/{collection}/{id}")]
     public JObject Get(string collection, string id)
     {
       return getItem(GetCollection(collection), id);
     }
 
-    [Route("ApiSandbox/{collection}")]
+    [Route("col/{collection}")]
     public HttpResponseMessage Post(string collection, [FromBody]JObject jsonbody)
     {
       if (jsonbody["id"] == null)
@@ -101,31 +101,42 @@ namespace ApiSandbox
       return new HttpResponseMessage(HttpStatusCode.Created);
     }
 
-    [Route("ApiSandbox/{collection}/{id}")]
+    [Route("col/{collection}/{id}")]
     public void Put(string collection, string id, [FromBody]JObject jsonbody)
     {
       jsonbody["id"] = id;
       setItem(GetCollection(collection), id, jsonbody);
     }
 
-    [Route("ApiSandbox/{collection}/{id}")]
+    [Route("col/{collection}/{id}")]
     public void Delete(string collection, string id)
     {
       deleteItem(GetCollection(collection), id);
     }
 
+    [HttpPost]
+    [Route("col/{collection}/bulkload")]
+    public void BulkLoad(string collection, [FromBody]JObject[] jsonbody)
+    {
+      Dictionary<string, JObject> dicCollection = GetCollection(collection);
+      dicCollection.Clear();
+
+      foreach (JObject item in jsonbody)
+        setItem(dicCollection, item);
+    }
+
     [HttpGet]
-    [Route("ApiSandbox/dbcollections")]
+    [Route("dbc/list")]
     public List<ApiSandbox.Collection> GetDbCollectionInfo()
     {
       using (var db = GetDb())
       {
-        return db.Fetch<ApiSandbox.Collection>("SELECT name,groupname,modified FROM Collections");
+        return db.Fetch<ApiSandbox.Collection>("SELECT Id,name,groupname,modified FROM Collections");
       }
     }
 
     [HttpGet]
-    [Route("ApiSandbox/dbcollections/groupsave/{group_name}")]
+    [Route("dbc/gsave/{group_name}")]
     public void dbcollection_group_save(string group_name)
     {
       dbcollection_group_delete(group_name);
@@ -137,7 +148,7 @@ namespace ApiSandbox
     }
 
     [HttpGet]
-    [Route("ApiSandbox/dbcollections/groupload/{group_name}")]
+    [Route("dbc/gload/{group_name}")]
     public int dbcollection_group_load(string group_name)
     {
       using (var db = GetDb())
@@ -153,7 +164,7 @@ namespace ApiSandbox
     }
 
     [HttpGet]
-    [Route("ApiSandbox/dbcollections/groupdelete/{group_name}")]
+    [Route("dbc/gdelete/{group_name}")]
     public void dbcollection_group_delete(string group_name)
     {
       using (var db = GetDb())
@@ -163,17 +174,17 @@ namespace ApiSandbox
     }
 
     [HttpGet]
-    [Route("ApiSandbox/dbcollections/delete/{target_name}")]
-    public void dbcollection_delete(string target_name)
+    [Route("dbc/delete/{name}")]
+    public int dbcollection_delete(string name)
     {
       using (var db = GetDb())
       {
-        db.Execute("DELETE FROM Collections WHERE Name = @0", target_name);
+        return db.Execute("DELETE FROM Collections WHERE Name = @0 AND GroupName IS NULL", name);
       }
     }
 
     [HttpGet]
-    [Route("ApiSandbox/dbcollections/save/{coll_name}/{target_name}")]
+    [Route("dbc/save/{coll_name}/{target_name}")]
     public void dbcollection_save(string coll_name, string target_name, string group_name = null)
     {
       StringBuilder sb = new StringBuilder("[");
@@ -187,22 +198,22 @@ namespace ApiSandbox
       {
         var existingRecord = db.SingleOrDefault<ApiSandbox.Collection>("WHERE Name = @0 AND GroupName = @1", target_name, group_name);
         if (existingRecord != null)
-          db.Update(new ApiSandbox.Collection { Id = existingRecord.Id, GroupName = group_name, Name = target_name, Value = sb.ToString() });
+          db.Update(new ApiSandbox.Collection { Id = existingRecord.Id, GroupName = group_name, Name = target_name, Value = sb.ToString(), Modified = DateTime.Now });
         else
-          db.Insert(new ApiSandbox.Collection { Name = target_name, GroupName = group_name, Value = sb.ToString() });
+          db.Insert(new ApiSandbox.Collection { Name = target_name, GroupName = group_name, Value = sb.ToString(), Modified=DateTime.Now });
       }
     }
 
     [HttpGet]
-    [Route("ApiSandbox/dbcollections/load/{coll_name}/{src_name}")]
-    public int dbcollection_load(string coll_name, string src_name)
+    [Route("dbc/load/{db_Coll_Id}/{coll_name}")]
+    public int dbcollection_load(int db_Coll_Id, string coll_name)
     {
       Dictionary<string, JObject> dicColl = GetCollection(coll_name);
       dicColl.Clear();
 
       using (var db = GetDb())
       {
-        var dbColl = db.SingleOrDefault<ApiSandbox.Collection>("SELECT * FROM Collections WHERE Name=@0", src_name);
+        var dbColl = db.SingleOrDefault<ApiSandbox.Collection>("SELECT * FROM Collections WHERE Id=@0", db_Coll_Id);
 
         if (dbColl != null)
         {
@@ -234,17 +245,6 @@ namespace ApiSandbox
         }
       }
       return itemCount;
-    }
-
-    [HttpPost]
-    [Route("ApiSandbox/{collection}/bulkload")]
-    public void BulkLoad(string collection, [FromBody]JObject[] jsonbody)
-    {
-      Dictionary<string, JObject> dicCollection = GetCollection(collection);
-      dicCollection.Clear();
-
-      foreach (JObject item in jsonbody)
-        setItem(dicCollection, item);
     }
   }
 }
