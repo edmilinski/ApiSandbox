@@ -1,37 +1,40 @@
 ﻿ApiSandbox Routes
 
 List all collections in database 
-	ApiSandbox/dbc/list
+	ApiSandbox/listdb
 
 List Loaded Collection info
-	ApiSandbox/col/list
+	ApiSandbox/listloaded
 
 Load a collection from db, db_Coll_Id in database, loaded name coll_name
-	ApiSandbox/dbc/load/{db_Coll_Id}/{coll_name}
+	ApiSandbox/load/{db_Coll_Id}/{coll_name}
 
 Return an already loaded collection 
-	ApiSandbox/col/{collection}
+	ApiSandbox/{collection}
 
 Return a document from a loaded collection
-	ApiSandbox/col/{collection}/{id}
+	ApiSandbox/{collection}/{id}
 
 Set in memory collection, 
-POST	ApiSandbox/col/{collection}
+POST	ApiSandbox/{collection}
 
 Update in memory collection data
-PUT		ApiSandbox/col/{collection}/{id}
+PUT		ApiSandbox/{collection}/{id}
 
 Load group of collections from database
-	ApiSandbox/dbc/gload/{group_name}
+	ApiSandbox/loadgroup/{group_name}
 
 Delete group of collections from database
-	ApiSandbox/dbc/gdelete/{group_name}
+	ApiSandbox/deletegroup/{group_name}
+
+Save group of collections to db
+	savegroup/group_name
 
 Delete collection from database
 	ApiSandbox/dbc/delete/{name}
 
 Save in memory collection to database
-	ApiSandbox/dbc/save/{coll_name}/{target_name}
+	ApiSandbox/save/{coll_name}/{target_name}
 
 Load collection data
 	ApiSandbox/bulkload/{collection}

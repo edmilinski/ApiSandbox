@@ -69,27 +69,20 @@ namespace ApiSandbox
         return false;
     }
 
-    [HttpGet]
-    [Route("col/list")]
-    public List<string> GetCollectionNames()
-    {
-      return _dicAllCollections.Select(x => x.Key).ToList();
-    }
-
-    [Route("col/{collection}")]
+    [Route("{collection}")]
     public List<JObject> Get(string collection)
     {
       Dictionary<string, JObject> dicCollection = GetCollection(collection);
       return dicCollection.Values.ToList();
     }
 
-    [Route("col/{collection}/{id}")]
+    [Route("{collection}/{id}")]
     public JObject Get(string collection, string id)
     {
       return getItem(GetCollection(collection), id);
     }
 
-    [Route("col/{collection}")]
+    [Route("{collection}")]
     public HttpResponseMessage Post(string collection, [FromBody]JObject jsonbody)
     {
       if (jsonbody["id"] == null)
@@ -102,21 +95,21 @@ namespace ApiSandbox
       return new HttpResponseMessage(HttpStatusCode.Created);
     }
 
-    [Route("col/{collection}/{id}")]
+    [Route("{collection}/{id}")]
     public void Put(string collection, string id, [FromBody]JObject jsonbody)
     {
       jsonbody["id"] = id;
       setItem(GetCollection(collection), id, jsonbody);
     }
 
-    [Route("col/{collection}/{id}")]
+    [Route("{collection}/{id}")]
     public void Delete(string collection, string id)
     {
       deleteItem(GetCollection(collection), id);
     }
 
     [HttpPost]
-    [Route("col/bulkload/{collection}")]
+    [Route("bulkload/{collection}")]
     public void BulkLoad(string collection, [FromBody]JObject[] jsonbody)
     {
       Dictionary<string, JObject> dicCollection = GetCollection(collection);
@@ -127,7 +120,14 @@ namespace ApiSandbox
     }
 
     [HttpGet]
-    [Route("dbc/list")]
+    [Route("listloaded")]
+    public List<string> GetCollectionNames()
+    {
+      return _dicAllCollections.Select(x => x.Key).ToList();
+    }
+
+    [HttpGet]
+    [Route("listdb")]
     public List<ApiSandbox.Collection> GetDbCollectionInfo()
     {
       using (var db = GetDb())
@@ -137,7 +137,7 @@ namespace ApiSandbox
     }
 
     [HttpGet]
-    [Route("dbc/gsave/{group_name}")]
+    [Route("savegroup/{group_name}")]
     public void dbcollection_group_save(string group_name)
     {
       dbcollection_group_delete(group_name);
@@ -149,7 +149,7 @@ namespace ApiSandbox
     }
 
     [HttpGet]
-    [Route("dbc/gload/{group_name}")]
+    [Route("loadgroup/{group_name}")]
     public int dbcollection_group_load(string group_name)
     {
       using (var db = GetDb())
@@ -165,7 +165,7 @@ namespace ApiSandbox
     }
 
     [HttpGet]
-    [Route("dbc/gdelete/{group_name}")]
+    [Route("deletegroup/{group_name}")]
     public void dbcollection_group_delete(string group_name)
     {
       using (var db = GetDb())
@@ -175,7 +175,7 @@ namespace ApiSandbox
     }
 
     [HttpGet]
-    [Route("dbc/delete/{name}")]
+    [Route("delete/{name}")]
     public int dbcollection_delete(string name)
     {
       using (var db = GetDb())
@@ -185,7 +185,7 @@ namespace ApiSandbox
     }
 
     [HttpGet]
-    [Route("dbc/save/{coll_name}/{target_name}")]
+    [Route("save/{coll_name}/{target_name}")]
     public void dbcollection_save(string coll_name, string target_name, string group_name = null)
     {
       StringBuilder sb = new StringBuilder("[");
@@ -211,7 +211,7 @@ namespace ApiSandbox
     }
 
     [HttpGet]
-    [Route("dbc/load/{db_Coll_Id}/{coll_name}")]
+    [Route("load/{db_Coll_Id}/{coll_name}")]
     public int dbcollection_load(int db_Coll_Id, string coll_name)
     {
       Dictionary<string, JObject> dicColl = GetCollection(coll_name);
