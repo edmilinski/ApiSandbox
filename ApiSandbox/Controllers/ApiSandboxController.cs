@@ -8,11 +8,12 @@ using System.Web.Http;
 using Newtonsoft.Json.Linq;
 using System.Configuration;
 using System.Web.Http;
-
-
+using System.Web.Http.Cors;
 
 namespace ApiSandbox
 {
+  [EnableCors(origins: "*", headers: "*", methods: "*")]
+
   public class ApiSandboxController : ApiController
   {
     private PetaPoco.Database GetDb()
@@ -115,7 +116,7 @@ namespace ApiSandbox
     }
 
     [HttpPost]
-    [Route("col/{collection}/bulkload")]
+    [Route("col/bulkload/{collection}")]
     public void BulkLoad(string collection, [FromBody]JObject[] jsonbody)
     {
       Dictionary<string, JObject> dicCollection = GetCollection(collection);
@@ -196,7 +197,12 @@ namespace ApiSandbox
       sb.Append("]");
       using (var db = GetDb())
       {
-        var existingRecord = db.SingleOrDefault<ApiSandbox.Collection>("WHERE Name = @0 AND GroupName = @1", target_name, group_name);
+        Collection existingRecord;
+        if(group_name != null)
+          existingRecord = db.SingleOrDefault<ApiSandbox.Collection>("WHERE Name = @0 AND GroupName = @1", target_name, group_name);
+        else
+          existingRecord = db.SingleOrDefault<ApiSandbox.Collection>("WHERE Name = @0 AND GroupName IS NULL", target_name);
+
         if (existingRecord != null)
           db.Update(new ApiSandbox.Collection { Id = existingRecord.Id, GroupName = group_name, Name = target_name, Value = sb.ToString(), Modified = DateTime.Now });
         else

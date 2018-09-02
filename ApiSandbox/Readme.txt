@@ -34,4 +34,4 @@ Save in memory collection to database
 	ApiSandbox/dbc/save/{coll_name}/{target_name}
 
 Load collection data
-	ApiSandbox/{collection}/bulkload
+	ApiSandbox/bulkload/{collection}
