@@ -69,6 +69,11 @@ namespace ApiSandbox
         return false;
     }
 
+    /// <summary>
+    /// return a collection of json documents
+    /// </summary>
+    /// <param name="collection"></param>
+    /// <returns></returns>
     [Route("{collection}")]
     public List<JObject> Get(string collection)
     {
@@ -76,12 +81,24 @@ namespace ApiSandbox
       return dicCollection.Values.ToList();
     }
 
+    /// <summary>
+    /// return a json document 
+    /// </summary>
+    /// <param name="collection"></param>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [Route("{collection}/{id}")]
     public JObject Get(string collection, string id)
     {
       return getItem(GetCollection(collection), id);
     }
 
+    /// <summary>
+    /// upload a json document into a collection
+    /// </summary>
+    /// <param name="collection"></param>
+    /// <param name="jsonbody"></param>
+    /// <returns></returns>
     [Route("{collection}")]
     public HttpResponseMessage Post(string collection, [FromBody]JObject jsonbody)
     {
@@ -95,6 +112,12 @@ namespace ApiSandbox
       return new HttpResponseMessage(HttpStatusCode.Created);
     }
 
+    /// <summary>
+    /// update a json document in a collection
+    /// </summary>
+    /// <param name="collection">in-memory collection name</param>
+    /// <param name="id">json document id</param>
+    /// <param name="jsonbody">json document</param>
     [Route("{collection}/{id}")]
     public void Put(string collection, string id, [FromBody]JObject jsonbody)
     {
@@ -102,12 +125,22 @@ namespace ApiSandbox
       setItem(GetCollection(collection), id, jsonbody);
     }
 
+    /// <summary>
+    /// delete a json document from an in-memory collection
+    /// </summary>
+    /// <param name="collection">collection name</param>
+    /// <param name="id">json document id</param>
     [Route("{collection}/{id}")]
     public void Delete(string collection, string id)
     {
       deleteItem(GetCollection(collection), id);
     }
 
+    /// <summary>
+    /// bulk load an array of json objects into an in-memory collection
+    /// </summary>
+    /// <param name="collection">Collection name</param>
+    /// <param name="jsonbody">array of json objects</param>
     [HttpPost]
     [Route("bulkload/{collection}")]
     public void BulkLoad(string collection, [FromBody]JObject[] jsonbody)
@@ -119,13 +152,21 @@ namespace ApiSandbox
         setItem(dicCollection, item);
     }
 
+    /// <summary>
+    /// list in-memory collections
+    /// </summary>
+    /// <returns></returns>
     [HttpGet]
-    [Route("listloaded")]
+    [Route("listmem")]
     public List<string> GetCollectionNames()
     {
       return _dicAllCollections.Select(x => x.Key).ToList();
     }
 
+    /// <summary>
+    /// list collections in database
+    /// </summary>
+    /// <returns></returns>
     [HttpGet]
     [Route("listdb")]
     public List<ApiSandbox.Collection> GetDbCollectionInfo()
@@ -136,8 +177,12 @@ namespace ApiSandbox
       }
     }
 
+    /// <summary>
+    /// save all in-memory collections to database as a group
+    /// </summary>
+    /// <param name="group_name">Collection group name in database</param>
     [HttpGet]
-    [Route("savegroup/{group_name}")]
+    [Route("groupsave/{group_name}")]
     public void dbcollection_group_save(string group_name)
     {
       dbcollection_group_delete(group_name);
@@ -148,8 +193,13 @@ namespace ApiSandbox
       }
     }
 
+    /// <summary>
+    /// load saved group of collections from database
+    /// </summary>
+    /// <param name="group_name">Collection group name in database</param>
+    /// <returns></returns>
     [HttpGet]
-    [Route("loadgroup/{group_name}")]
+    [Route("groupload/{group_name}")]
     public int dbcollection_group_load(string group_name)
     {
       using (var db = GetDb())
@@ -164,8 +214,12 @@ namespace ApiSandbox
       }
     }
 
+    /// <summary>
+    /// delete saved group of collections from database
+    /// </summary>
+    /// <param name="group_name">Collection group name in database</param>
     [HttpGet]
-    [Route("deletegroup/{group_name}")]
+    [Route("groupdelete/{group_name}")]
     public void dbcollection_group_delete(string group_name)
     {
       using (var db = GetDb())
@@ -174,16 +228,27 @@ namespace ApiSandbox
       }
     }
 
+    /// <summary>
+    /// delete a collection from database
+    /// </summary>
+    /// <param name="db_coll_Id">Collection record id in database</param>
+    /// <returns></returns>
     [HttpGet]
-    [Route("delete/{name}")]
-    public int dbcollection_delete(string name)
+    [Route("delete/{db_coll_Id}")]
+    public int dbcollection_delete(int db_coll_Id)
     {
       using (var db = GetDb())
       {
-        return db.Execute("DELETE FROM Collections WHERE Name = @0 AND GroupName IS NULL", name);
+        return db.Execute("DELETE FROM Collections WHERE Id = @0", db_coll_Id);
       }
     }
 
+    /// <summary>
+    /// save in-memory collection to database
+    /// </summary>
+    /// <param name="coll_name">in-memory collection name</param>
+    /// <param name="target_name">database collection name</param>
+    /// <param name="group_name">database group name</param>
     [HttpGet]
     [Route("save/{coll_name}/{target_name}")]
     public void dbcollection_save(string coll_name, string target_name, string group_name = null)
@@ -210,16 +275,22 @@ namespace ApiSandbox
       }
     }
 
+    /// <summary>
+    /// load a collection from database
+    /// </summary>
+    /// <param name="db_coll_Id">database record id</param>
+    /// <param name="coll_name">collection name when loaded</param>
+    /// <returns></returns>
     [HttpGet]
-    [Route("load/{db_Coll_Id}/{coll_name}")]
-    public int dbcollection_load(int db_Coll_Id, string coll_name)
+    [Route("load/{db_coll_Id}/{coll_name}")]
+    public int dbcollection_load(int db_coll_Id, string coll_name)
     {
       Dictionary<string, JObject> dicColl = GetCollection(coll_name);
       dicColl.Clear();
 
       using (var db = GetDb())
       {
-        var dbColl = db.SingleOrDefault<ApiSandbox.Collection>("SELECT * FROM Collections WHERE Id=@0", db_Coll_Id);
+        var dbColl = db.SingleOrDefault<ApiSandbox.Collection>("SELECT * FROM Collections WHERE Id=@0", db_coll_Id);
 
         if (dbColl != null)
         {

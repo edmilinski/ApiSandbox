@@ -6,8 +6,8 @@ List all collections in database
 List Loaded Collection info
 	ApiSandbox/listloaded
 
-Load a collection from db, db_Coll_Id in database, loaded name coll_name
-	ApiSandbox/load/{db_Coll_Id}/{coll_name}
+Load a collection from db, db_coll_Id in database, loaded name coll_name
+	ApiSandbox/load/{db_coll_Id}/{coll_name}
 
 Return an already loaded collection 
 	ApiSandbox/{collection}
